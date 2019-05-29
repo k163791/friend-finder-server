@@ -9,8 +9,6 @@ const log    = new lUtils.Log('debug');
 const nodemailer = require('nodemailer');
 // const SMS = require('sms-node');
 
-
-
 const db = knex({
 	client : 'pg',
 	connection : {
@@ -72,8 +70,8 @@ app.post('/sendMessage',(req,res)=> {
 })
 
 
+
 app.post('/sendMail',(req,res) => {
-	console.log(`Exec`);
 	const output =`
 	<h3>Invitation To Friend-Finder App</h3>
 	<p>Click on the link below to register and start finding new friends</p>
@@ -84,8 +82,8 @@ app.post('/sendMail',(req,res) => {
     // port: 587,
     // secure: false, // true for 465, false for other ports
     auth: {
-      user: 'uzairhuxxain123@gmail.com', // generated ethereal user
-      pass: 'familyfriends' // generated ethereal password
+      user: 'uzairhuxxain123@gmail.com', 
+      pass: 'familyfriends' 
     }, tls : {
   	rejectUnauthorized : false
   }
@@ -101,8 +99,8 @@ app.post('/sendMail',(req,res) => {
     html: output // html body
   });
 
-  console.log("Message sent: %s", info.messageId);
-  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+  console.log("Message sent using SMTP Protocol ");
+  console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
 })
 
 
@@ -142,6 +140,62 @@ app.post('/retrieveID',(req,res) => {
 	}).catch(err => res.status(400).json('Something Went Wrong'))
 })
 
+app.post('/getProfile',(req,res) => {
+	db.select('*').from('users').where('id','=',req.body.id)
+	.then(result => {
+		res.json(result[0]);
+	})
+	.catch(err => res.status(400).res.json(`Someting Went Wrong : `,err));
+})
+
+
+app.post('/updateProfile',(req,res) => {
+	db('users')
+	.where('id','=',req.body.id)
+	.update({
+		email : req.body.email,
+		phone_no : req.body.phone_no,
+		password : req.body.password,
+		name : req.body.name,
+		image : req.body.image
+	}).then(updatedProfile => {
+		res.json(`Success`)
+	}).catch(err => res.status(400).res.json(`Error : `,err))
+})
+
+app.post('/addSkill',(req,res) => {
+	db('skills')
+	.returning('*')
+	.insert({
+		user_id : req.body.user_id,
+		skill : req.body.skill
+	}).then(result => res.json(`Success`))
+	.catch(err => res.status(400).res.json(`Error`))
+})
+
+
+app.post('/addFriend',(req,res) => {
+	db('friends')
+	.insert({
+		user_id : req.body.user_id,
+		friend : req.body.friend
+	}).then(result => res.json(`Success`))
+	.catch(err => res.status(400).res.json(`Error : `,err))
+})
+
+app.post('/setLocation',(req,res) => {
+	db('location')
+	.returning('*')
+	.where('user_id','=',req.body.user_id)
+	.update({
+		latitude : req.body.latitude,
+		longitude : req.body.longitude
+	}).then(newData => {
+		return res.json('Success');
+	}).catch(err => res.status(400).json(`Something Went Wrong`));
+})
+
+
 app.post('/getevents',(req,res) => {
 	db.select('event','id').from('events')
 	.where('user_id','=',req.body.user_id)
@@ -152,9 +206,48 @@ app.post('/getevents',(req,res) => {
 
 app.post('/getusers',(req,res) => {
 	db.select('*').from('users')
+	.where('id','!=',req.body.user_id)
 	.then(users => {
 		res.json(users);
 	}).catch(err=> res.status(400).json(`Couldn't Get Users`));
+})
+
+
+app.post('/getFriends',(req,res) => {
+	var j=0;
+	var result2 = [];
+	db.select('friend').from('friends').where('user_id','=',req.body.user_id)
+	.then(result => {
+		for(i=0;i<result.length;i++) {
+			db.select('*').from('users').where('id','=',result[i].friend)
+			.then(rest => {
+				j = j + 1;
+				result2.push(rest[0]);
+				if(j === result.length) {
+					res.json(result2);
+				}
+			}).catch(err => res.status(400).json(`Something Went Wrong`));
+		}
+	})
+})
+
+app.post('/getFilteredUsers',(req,res) => {
+	var result2 = [];
+	var j=0;
+	db.select('user_id').from('skills').where('skill','=',req.body.skill)
+	.then(result => {
+		for(i=0;i<result.length;i++) {
+			db.select('id','email','phone_no','name','image').from('users').where('id','=',result[i].user_id)
+			.then(rest => {
+				j = j+1;
+				result2.push(rest[0]);
+				if(j===result.length) {
+					res.json(result2);
+				}
+			}).catch(err => res.status(400).json(`Something Went Wrong`));
+		}
+		
+	}).catch(err => res.status(400).json(`Something Went Wrong`));
 })
 
 app.post('/getSkills',(req,res)=>{
@@ -176,6 +269,6 @@ app.post('/event',(req,res) => {
 	.catch(err => res.status(400).json('Something Went Wrong'))
 })
 
-app.listen(3001, ()=> {
+app.listen(process.env.PORT || 3001, ()=> {
 	console.log('app is running on port 3001');
 });
