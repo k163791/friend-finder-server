@@ -75,7 +75,7 @@ app.post('/sendMail',(req,res) => {
 	const output =`
 	<h3>Invitation To Friend-Finder App</h3>
 	<p>Click on the link below to register and start finding new friends</p>
-	<a href='http://3.86.164.44'>Click Here...</a>
+	<a href='http://ec2-3-86-164-44.compute-1.amazonaws.com:3000'>Click Here...</a>
 	`;
 	let transporter = nodemailer.createTransport({
     service : "gmail",
