@@ -82,8 +82,8 @@ app.post('/sendMail',(req,res) => {
     // port: 587,
     // secure: false, // true for 465, false for other ports
     auth: {
-      user: 'uzairhuxxain123@gmail.com', 
-      pass: 'familyfriends' 
+      user: 'Enter the Email you want to send requests from here ...', 
+      pass: 'Enter that emails password here' 
     }, tls : {
   	rejectUnauthorized : false
   }
