@@ -92,7 +92,7 @@ app.post('/sendMail',(req,res) => {
 
   // send mail with defined transport object
   let info = transporter.sendMail({
-    from: '"Friend Finder App👻" <uzairhuxxain123@gmail.com>', // sender address
+    from: '"Friend Finder App👻" <Enter the senders email here....>', // sender address
     to: req.body.email, // list of receivers
     subject: "Hello from Friend-Finder", // Subject line
     text: "Friend Finder Invitation", // plain text body
